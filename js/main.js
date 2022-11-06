@@ -9,23 +9,31 @@ const withdrawBtn = document.getElementById('withdrawBtn');
 withdrawBtn.onclick = withdraw
 const balanceBtn = document.getElementById('balanceBtn');
 balanceBtn.onclick = getBalance
-const modalBtn = document.getElementById('modalBtn');
-const modalMsg = document.getElementById('modalMsg');
+const showFund = document.getElementById('showFund');
+
+const successMsg = document.getElementById('successMsg');
+const errorMsg = document.getElementById('errorMsg');
 
 
 const handleError = (error) => {
-    if((/null/g).test(error?.message) || (/unknown/g).test(error?.message)){
+    if(error?.code == '-32002'){
         connect()
     }else{
-        const msg = error?.message || "Error while connecting to MetaMask!";
-        modalMsg.innerHTML = msg;
-        modalBtn.click()
+        let msg = error?.message || "Error while connecting to MetaMask!";
+     
+        if(error?.code == 'INSUFFICIENT_FUNDS'){
+            // in sufficient fund
+            msg = 'INSUFFICIENT_FUNDS';
+        }
+        errorMsg.style.display = 'block';
+        errorMsg.innerHTML = msg;
     }
 }
 
 const getConnectedContractProvider = async () => {
     if (typeof window.ethereum !== 'undefined') {
         try {
+            clearMsg()
             const ethereum = window.ethereum;
             // connect to MetaMask
             const provider = new ethers.providers.Web3Provider(ethereum);
@@ -53,9 +61,8 @@ async function connect() {
         const ethereum = window.ethereum;
         // connect to MetaMask
         await ethereum.request({ method: "eth_requestAccounts" });
-        connectBtn.innerHTML = "Connected";
+        connectBtn.innerHTML = "Connected !";
         console.log("Connected!");
-
     } catch (error) {
         return handleError(error)
     }
@@ -66,7 +73,6 @@ async function connect() {
 }
 
 async function fund(){
-
     const ethAmount = document.getElementById('ethAmount').value;
 
     if(!ethAmount){
@@ -85,7 +91,6 @@ async function fund(){
         // listen for blockchain events
         await listenForTransactionMine(trxResponse, provider)
         console.log('Done!')
-    
    } catch (error) {
     return handleError(error)
    }
@@ -96,8 +101,8 @@ async function withdraw(){
     try {
         const [contract, provider] = await getConnectedContractProvider()
 
-        const trxResponse = await contract.withdraw()
-
+        const trxResponse = await contract.withdraw();
+    
         // listen for blockchain events
         await listenForTransactionMine(trxResponse, provider)
         console.log('Done!')
@@ -115,14 +120,12 @@ async function getBalance(){
             contract.address
         )
 
-        balance = `${balance/10**18} ETH`
+        balance = `${balance/10**18}`
 
         console.log("FundMe balance")
         console.log(balance)
 
-        modalMsg.innerHTML = balance;
-        modalBtn.click()
-
+        showFund.innerHTML = balance;
     } catch (error) {
         return handleError(error)
     }
@@ -132,10 +135,18 @@ function listenForTransactionMine(trxResponse, provider){
     console.log(`mining ${trxResponse.hash}`)
     return new Promise((resolve, reject) =>{
         provider.once(trxResponse.hash, (trxReceipt)=>{
-            console.log(`
+            const _s = `
             Completed with ${trxReceipt.confirmations} confirmations
-            `)
+            `;
+            console.log(_s)
+            successMsg.style.display = 'block';
+            successMsg.innerHTML = _s;
             resolve()
         })
     })
+}
+
+function clearMsg() {
+    successMsg.style.display = 'none';
+    errorMsg.style.display = 'none';
 }
