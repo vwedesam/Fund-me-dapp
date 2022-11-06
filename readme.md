@@ -8,4 +8,4 @@
 
 ## Screenshot
 
-![dapp](https://github.com/vwedesam/fund-me-dapp/blob/main/assets/Screenshot 2022-11-06 at 10.44.24 PM.png)
+![dapp](https://github.com/vwedesam/Fund-me-dapp/blob/main/assets/Screenshot%202022-11-06%20at%2010.44.24%20PM.png)
